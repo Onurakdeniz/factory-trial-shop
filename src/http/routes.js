@@ -114,6 +114,10 @@ function cartRoutes(router, shop) {
   router.add('POST', '/carts/:id/checkout', ({ params }) => created(shop.orders.checkout(params.id)));
 }
 
+function customerRoutes(router, shop) {
+  router.add('GET', '/customers/:customerId/orders/export', ({ params }) => ok(shop.orders.exportOrders(params.customerId)));
+}
+
 function orderRoutes(router, shop) {
   router.add('GET', '/orders', ({ query }) =>
     ok({ orders: shop.orders.listOrders({ status: query.status, customerId: query.customerId }) }),
@@ -164,5 +168,6 @@ export function registerRoutes(router, shop) {
   stockRoutes(router, shop);
   cartRoutes(router, shop);
   orderRoutes(router, shop);
+  customerRoutes(router, shop);
   return router;
 }

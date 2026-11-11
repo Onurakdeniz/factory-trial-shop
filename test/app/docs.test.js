@@ -25,3 +25,10 @@ test('docs/inventory.md describes the waitlist rules', () => {
     assert.ok(inventory.includes(text), `docs/inventory.md should mention ${text}`);
   }
 });
+
+test('docs/api.md describes the orders export', () => {
+  const api = doc('api.md');
+  for (const text of ['GET /customers/:customerId/orders/export', 'order_id', 'status', 'total', 'filename']) {
+    assert.ok(api.includes(text), `docs/api.md should mention ${text}`);
+  }
+});

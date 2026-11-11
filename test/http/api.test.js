@@ -171,3 +171,13 @@ test('the waitlist can be joined, read and left over HTTP', async () => {
   assert.deepEqual(shop.events.list({ type: 'waitlist.notified' }).map((e) => e.customerId), ['bob']);
   assert.deepEqual((await call('GET', '/stock/KETTLE-1/waitlist')).body.waiting, []);
 });
+
+test('GET /customers/:customerId/orders/export answers filename and csv', async () => {
+  const { shop, call } = api();
+  const { placeOrder } = await import('../app/fixtures.js');
+  const order = placeOrder(shop, { 'TEA-GREEN': 1 }, { customerId: 'c9' });
+  const res = await call('GET', '/customers/c9/orders/export');
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { filename: 'orders-c9.csv', csv: `order_id,status,total\n${order.id},placed,9.90\n` });
+  assert.equal((await call('GET', '/customers/none/orders/export')).body.csv, 'order_id,status,total\n');
+});

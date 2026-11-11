@@ -88,6 +88,15 @@ export function formatMinor(amountMinor, currency = CURRENCY) {
   return `${sign}${major}.${minor} ${currency}`;
 }
 
+/** Writes minor units as plain decimal major units, e.g. 1250 as "12.50", with integer arithmetic only. */
+export function formatMajor(amountMinor) {
+  assertMinor(amountMinor);
+  const sign = amountMinor < 0 ? '-' : '';
+  const absolute = Math.abs(amountMinor);
+  const major = Math.floor(absolute / MINOR_PER_MAJOR);
+  return `${sign}${major}.${String(absolute % MINOR_PER_MAJOR).padStart(2, '0')}`;
+}
+
 /** Parses "12", "12.5" or "12.50" (major units) into minor units. */
 export function parseMajor(text) {
   const match = /^(-)?(\d+)(?:\.(\d{1,2}))?$/.exec(String(text).trim());
