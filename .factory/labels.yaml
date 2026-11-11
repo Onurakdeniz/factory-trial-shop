@@ -1,0 +1,8 @@
+schema: labels.v1
+groups:
+  area:
+    cardinality: one-or-more
+    labels: ["app", "docs"]
+  risk:
+    cardinality: one
+    labels: [low, medium, high]
