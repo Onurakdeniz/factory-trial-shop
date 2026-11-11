@@ -143,3 +143,20 @@ test('a late payment changes nothing when one of its lines cannot be held again'
   assert.throws(() => shop.orders.pay(first.id, { amountMinor: first.totalMinor, reference: 'late' }), InsufficientStockError);
   assert.equal(shop.inventory.getStock('TEA-GREEN').reserved, 0);
 });
+
+test('exportOrders lists only that customer\'s orders as CSV, oldest first', () => {
+  const { shop, clock } = seededShop();
+  const first = placeOrder(shop, { 'TEA-GREEN': 3, 'MUG-WHITE': 2 }, { customerId: 'cust-1' });
+  clock.advance?.(1000);
+  placeOrder(shop, { 'BOOK-BREW': 1 }, { customerId: 'cust-2' });
+  const second = placeOrder(shop, { 'BOOK-BREW': 1 }, { customerId: 'cust-1' });
+  shop.orders.cancel(second.id);
+  const { filename, csv } = shop.orders.exportOrders('cust-1');
+  assert.equal(filename, 'orders-cust-1.csv');
+  assert.equal(csv, `order_id,status,total\n${first.id},placed,48.60\n${second.id},cancelled,29.95\n`);
+});
+
+test('exportOrders gives a customer without orders just the header line', () => {
+  const { shop } = seededShop();
+  assert.deepEqual(shop.orders.exportOrders('nobody'), { filename: 'orders-nobody.csv', csv: 'order_id,status,total\n' });
+});

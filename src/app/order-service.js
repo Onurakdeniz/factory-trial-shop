@@ -15,6 +15,8 @@ import {
   shipOrder,
   summarizeOrder,
 } from '../domain/order.js';
+import { toCsv } from '../domain/csv.js';
+import { formatMajor } from '../domain/money.js';
 import { planRefund } from '../domain/refunds.js';
 
 export const DEFAULT_HOLD_MINUTES = 15;
@@ -144,6 +146,12 @@ export function createOrderService({ repos, clock, ids, carts, inventory, holdMi
       .map(summarizeOrder);
   }
 
+  /** A customer's orders as CSV, oldest first; a customer without orders gets just the header line. */
+  function exportOrders(customerId) {
+    const rows = listOrders({ customerId }).map((order) => [order.id, order.status, formatMajor(order.totalMinor)]);
+    return { filename: `orders-${customerId}.csv`, csv: toCsv([['order_id', 'status', 'total'], ...rows]) };
+  }
+
   /** What happened to an order, oldest first. */
   function orderEvents(orderId) {
     repos.orders.require(orderId);
@@ -160,5 +168,5 @@ export function createOrderService({ repos, clock, ids, carts, inventory, holdMi
     return report;
   }
 
-  return { checkout, pay, ship, deliver, cancel, refund, listRefunds, getOrder, listOrders, orderEvents, statusReport };
+  return { checkout, pay, ship, deliver, cancel, refund, listRefunds, getOrder, listOrders, exportOrders, orderEvents, statusReport };
 }

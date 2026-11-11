@@ -1,4 +1,4 @@
-// A small CSV parser (RFC 4180 with the usual spreadsheet habits).
+// A small CSV parser and writer (RFC 4180 with the usual spreadsheet habits).
 //
 // Fields are separated by commas and may be quoted with "; inside quotes "" is one
 // quote, and commas and line breaks belong to the value (line breaks come out as
@@ -84,4 +84,16 @@ export function parseCsv(text) {
   }
   endRecord();
   return records;
+}
+
+const NEEDS_QUOTES = /[",\r\n]/;
+
+function quoteField(value) {
+  const text = String(value);
+  return NEEDS_QUOTES.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+/** Writes rows (lists of values) as CSV text: fields with commas, quotes or line breaks are quoted, lines end with LF. */
+export function toCsv(rows) {
+  return rows.map((row) => row.map(quoteField).join(',') + '\n').join('');
 }

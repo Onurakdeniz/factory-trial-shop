@@ -66,6 +66,17 @@ The cart view is `{ id, customerId, customerGroup, region, status, orderId, line
 discountMinor, coupon, taxMinor, shippingMinor, totalMinor }`; each line has `sku, name, quantity, unitMinor, netMinor,
 discountMinor, taxCategory, taxRateBp, taxMinor, grossMinor, priceSource, hint`.
 
+## Customers
+
+| Method and path | Body | Answer |
+| --- | --- | --- |
+| `GET /customers/:customerId/orders/export` | | `{ filename, csv }` |
+
+`filename` is `orders-<customerId>.csv`. `csv` has a header line `order_id,status,total` and one line per order of that
+customer, oldest first (orders created at the same time by id). `total` is in decimal euros with two decimals, such as
+`12.50`. Fields with commas, quotes or line breaks are quoted; lines end with LF. A customer without orders, or an
+unknown customer, gets 200 and just the header line.
+
 ## Orders
 
 | Method and path | Body | Answer |

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseCsv } from '../../src/domain/csv.js';
+import { parseCsv, toCsv } from '../../src/domain/csv.js';
 
 test('quoted fields, escaped quotes and commas', () => {
   assert.deepEqual(parseCsv('a,"b, c","say ""hi"""\n'), [{ line: 1, fields: ['a', 'b, c', 'say "hi"'] }]);
@@ -16,4 +16,9 @@ test('CRLF, blank lines and multi-line values keep line numbers', () => {
 
 test('an unterminated quote is an error', () => {
   assert.throws(() => parseCsv('a,"b\n'), (error) => error.code === 'csv_unterminated_quote' && error.details.line === 1);
+});
+
+test('toCsv quotes fields with commas, quotes and line breaks and ends lines with LF', () => {
+  assert.equal(toCsv([['a', 'b, c', 'say "hi"', 'x\ny'], ['1', 2, '', 'z']]), 'a,"b, c","say ""hi""","x\ny"\n1,2,,z\n');
+  assert.deepEqual(parseCsv(toCsv([['a,b', 'q"']])).map((r) => r.fields), [['a,b', 'q"']]);
 });
