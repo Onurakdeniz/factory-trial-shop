@@ -29,3 +29,12 @@ test('existing SKUs are updated with the columns the file has', () => {
   const tea = shop.catalog.getProduct('TEA-GREEN');
   assert.deepEqual([tea.basePriceMinor, tea.taxCategory, tea.tags], [480, 'reduced', ['tea']]);
 });
+
+test('importing a SKU added in another case updates that product instead of adding one', () => {
+  const shop = createShop();
+  shop.catalog.addProduct({ sku: 'mug-white', name: 'White mug', basePriceMinor: 1200 });
+  const report = importProducts(shop, 'sku,name,price\nMUG-WHITE,White mug,12.90\n');
+  assert.equal(report.imported, 1);
+  const products = shop.catalog.listProducts();
+  assert.deepEqual(products.map((p) => [p.sku, p.basePriceMinor]), [['MUG-WHITE', 1290]]);
+});

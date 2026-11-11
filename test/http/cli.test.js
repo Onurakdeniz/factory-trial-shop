@@ -95,3 +95,13 @@ test('import-products imports a CSV and writes the catalog', async () => {
   const missing = fakeIo({ 'bad.csv': 'sku,name\nA-1,x\n' });
   assert.equal(await run(['import-products', 'bad.csv'], missing.io), 2);
 });
+
+test('a catalog file with two products for one SKU fails naming both entries', async () => {
+  const products = [
+    { sku: 'mug-white', name: 'Mug', basePriceMinor: 1200 },
+    { sku: 'MUG-WHITE', name: 'Mug', basePriceMinor: 1290 },
+  ];
+  const io = fakeIo({ 'catalog.json': JSON.stringify({ products }) });
+  assert.notEqual(await run(['catalog', '--data', 'catalog.json'], io.io), 0);
+  assert.match(io.stderr(), /MUG-WHITE.*products\[0\].*mug-white.*products\[1\].*MUG-WHITE/);
+});

@@ -47,6 +47,10 @@ All bodies are JSON. Money fields end in `Minor` and are integer cents. Errors l
 | `GET /stock/:sku/waitlist` | | `{ sku, waiting: [{ customerId, since }] }`, first to join first; `since` is the join time in milliseconds |
 | `DELETE /stock/:sku/waitlist/:customerId` | | 204, no body |
 
+A SKU is stored upper-case and matched case-insensitively: `POST /products` with a case variant of an existing SKU
+answers 409 `product_exists`. A catalog file for the CLI that holds the same SKU twice (in any case) fails to load,
+naming both entries.
+
 The low-stock report lists the active products with `left <= threshold`, fewest first (ties by SKU). `left` is the
 units available to sell (`available`: on hand minus live holds); a product that was never stocked has 0 left.
 `threshold` is 5 unless `?threshold=` gives another; it must be a whole number of zero or more, otherwise the answer

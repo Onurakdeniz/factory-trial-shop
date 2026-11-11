@@ -55,3 +55,13 @@ test('catalog changes are logged', () => {
   assert.equal(events.length, 1);
   assert.deepEqual(events[0].fields, ['basePriceMinor']);
 });
+
+test('a SKU differing only in case counts as the same product', () => {
+  const shop = createShop();
+  shop.catalog.addProduct({ sku: 'mug-white', name: 'White mug', basePriceMinor: 1200 });
+  assert.deepEqual(shop.catalog.listProducts().map((p) => p.sku), ['MUG-WHITE']);
+  assert.throws(
+    () => shop.catalog.addProduct({ sku: 'MUG-WHITE', name: 'Again', basePriceMinor: 1 }),
+    (error) => error instanceof ConflictError && error.code === 'product_exists',
+  );
+});

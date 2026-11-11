@@ -2,6 +2,8 @@
 // It loads the file into an in-memory shop and can write a shop back to that form.
 
 import { createShop } from '../app/shop.js';
+import { ConflictError } from '../domain/errors.js';
+import { normalizeSku } from '../domain/product.js';
 import { UsageError } from './args.js';
 
 export function readDataFile(io, path) {
@@ -20,7 +22,19 @@ export function readDataFile(io, path) {
 
 export function loadShop(data, options = {}) {
   const shop = createShop(options);
-  for (const product of data.products ?? []) shop.catalog.addProduct(product);
+  const seen = new Map();
+  for (const [index, product] of (data.products ?? []).entries()) {
+    const sku = normalizeSku(product?.sku);
+    if (seen.has(sku)) {
+      const first = seen.get(sku);
+      throw new ConflictError(
+        `SKU ${sku} is in the catalog twice: products[${first.index}] (${first.written}) and products[${index}] (${product.sku}); remove one`,
+        { code: 'product_exists' },
+      );
+    }
+    seen.set(sku, { index, written: product?.sku });
+    shop.catalog.addProduct(product);
+  }
   for (const priceList of data.priceLists ?? []) shop.catalog.addPriceList(priceList);
   for (const [sku, units] of Object.entries(data.stock ?? {})) {
     if (units > 0) shop.inventory.receive(sku, units);

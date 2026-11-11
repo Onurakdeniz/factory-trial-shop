@@ -40,6 +40,8 @@ test('errors carry a status and a code', async () => {
   const duplicate = await call('POST', '/products', { sku: 'TEA-GREEN', name: 'Again', basePriceMinor: 1 });
   assert.equal(duplicate.status, 409);
   assert.equal(duplicate.body.error.code, 'product_exists');
+  const variant = await call('POST', '/products', { sku: 'tea-green', name: 'Again', basePriceMinor: 1 });
+  assert.deepEqual([variant.status, variant.body.error?.code ?? variant.body.code], [409, 'product_exists']);
   const missing = await call('GET', '/products/NOPE-1');
   assert.equal(missing.status, 404);
   const noBody = await call('POST', '/products');
