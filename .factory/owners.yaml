@@ -1,0 +1,5 @@
+schema: owners.v1
+# One ownership map (PROJ-04); owners and delegates are assigned at setup.
+areas:
+  app:  { paths: ["src/**", "test/**", "package.json"], owner: null, delegate: null }
+  docs: { paths: ["README.md", "docs/**"], owner: null, delegate: null }
