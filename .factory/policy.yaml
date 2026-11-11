@@ -1,0 +1,23 @@
+schema: policy.v1
+integration: main
+merge:
+  strategy: merge            # Factory merges with a merge commit only
+review_capacity_per_owner: 3
+team:
+  mode: solo                 # a team of one: you write the specs and approve the merges (TEAM-03)
+steps: work_item             # a plan is one step across its layers; "layer" runs one step per layer (PLAN-06)
+approval_transfer:
+  up_to: medium             # a rebuilt candidate with exactly the reviewed change keeps its approval (DEL-06)
+acceptance:
+  default_check: npm test    # a criterion written without a check of its own is checked by this (VER-02)
+protected_paths:             # a change touching these is always high risk and never merged without a person (TRUST-02)
+  - .factory/**
+  - "**/AGENTS.md"
+  - "**/CLAUDE.md"
+  - .claude/**
+  - .github/**
+  - .forgejo/**
+risk_tags:                   # every auth, payment and migration path the setup scan finds must be under one (PROJ-02)
+  auth: ["**/auth/**"]
+  payment: ["**/payment/**", "**/checkout/**", "src/domain/refunds.js", "test/app/refunds.test.js", "test/domain/refunds.test.js"]
+  migration: ["**/migrations/**"]
