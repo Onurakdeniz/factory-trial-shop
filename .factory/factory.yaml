@@ -1,0 +1,8 @@
+schema: factory.v1
+project: factory-trial-shop
+integration: main           # the one integration branch: Factory merges into it only through its gate (PROJ-03)
+adapters:
+  forge: github
+  ci: none                   # Actions are off for the repository: its protection requires only factory/ready
+  tracker: none
+  agent: claude-code
