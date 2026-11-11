@@ -144,3 +144,19 @@ export function stockView(item, at) {
       .map(({ id, quantity, orderId, expiresAt }) => ({ id, quantity, orderId, expiresAt })),
   };
 }
+
+/**
+ * The active products with `threshold` units or fewer left (available: on hand minus live holds),
+ * fewest first, then by SKU. A product without a stock item has 0 left.
+ */
+export function lowStock(items, products, threshold, at) {
+  const bySku = new Map(items.map((item) => [item.sku, item]));
+  return products
+    .filter((product) => product.active)
+    .map((product) => {
+      const item = bySku.get(product.sku);
+      return { sku: product.sku, name: product.name, left: item ? availableQuantity(item, at) : 0 };
+    })
+    .filter((line) => line.left <= threshold)
+    .sort((a, b) => a.left - b.left || a.sku.localeCompare(b.sku));
+}

@@ -39,6 +39,11 @@ take `onHand` below the units that are reserved.
 are restocked with a refund (`restock: true`). A change of an order's status never puts units back on hand: units
 that left the warehouse are counted again only once someone has them in hand, so `onHand` always matches the shelves.
 
+## Low-stock report
+
+`GET /reports/low-stock` helps support reorder in time: it lists active products whose `available` units are at or
+below the threshold (5 by default), fewest first. See [api.md](api.md).
+
 ## Waitlist
 
 A customer can wait for a product that has nothing available (`available <= 0`): `POST /stock/:sku/waitlist`.

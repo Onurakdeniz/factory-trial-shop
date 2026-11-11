@@ -26,6 +26,17 @@ function optionalString(body, field) {
   return value;
 }
 
+const DEFAULT_LOW_STOCK_THRESHOLD = 5;
+
+function parseThreshold(raw) {
+  if (raw === undefined) return DEFAULT_LOW_STOCK_THRESHOLD;
+  const threshold = /^\d+$/.test(raw) ? Number(raw) : NaN;
+  if (!Number.isSafeInteger(threshold)) {
+    throw new HttpError(400, 'validation_failed', 'threshold must be a whole number of zero or more');
+  }
+  return threshold;
+}
+
 const ok = (body) => ({ status: 200, body });
 const created = (body) => ({ status: 201, body });
 
@@ -74,6 +85,10 @@ function stockRoutes(router, shop) {
   router.add('DELETE', '/stock/:sku/waitlist/:customerId', ({ params }) => {
     shop.inventory.leaveWaitlist(params.sku, params.customerId);
     return { status: 204, body: null };
+  });
+  router.add('GET', '/reports/low-stock', ({ query }) => {
+    const threshold = parseThreshold(query.threshold);
+    return ok({ threshold, items: shop.inventory.lowStock(threshold) });
   });
   router.add('POST', '/stock/expire-holds', () => ok({ expired: shop.inventory.expireHolds() }));
 }
