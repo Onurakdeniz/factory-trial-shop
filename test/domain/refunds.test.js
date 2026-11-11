@@ -47,3 +47,11 @@ test('refunds are refused for the wrong status, too many units and bad lines', (
   assert.throws(() => planRefund(order(), [{ sku: 'CUP-1', quantity: 1 }, { sku: 'cup-1', quantity: 1 }]), ValidationError);
   assert.throws(() => planRefund(order(), []), ValidationError);
 });
+
+test('a discounted line refunds its share of the gross, which already has the discount', () => {
+  const discounted = order();
+  discounted.lines = [
+    { sku: 'MUG-WHITE', quantity: 3, unitMinor: 1200, netMinor: 3240, discountMinor: 360, taxMinor: 648, grossMinor: 3888, refundedQuantity: 0 },
+  ];
+  assert.equal(planRefund(discounted, [{ sku: 'MUG-WHITE', quantity: 1 }]).lines[0].amountMinor, 1296);
+});

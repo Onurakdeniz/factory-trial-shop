@@ -151,8 +151,8 @@ export function cancelOrder(order, { reason = 'customer request', at, refundId =
   let current = order;
   let refundMinor = 0;
   if (order.status === 'paid') {
-    // The rest of the payment: everything charged for the order, less what was refunded already.
-    const restMinor = order.subtotalMinor + order.taxMinor + order.shippingMinor - (order.refundedMinor ?? 0);
+    // The rest of the payment: what the customer paid, less what was refunded already.
+    const restMinor = order.totalMinor - (order.refundedMinor ?? 0);
     const plan = { ...planRefund(order, remainingLines(order)), amountMinor: restMinor };
     current = appendRefund(order, { id: refundId, plan, reason: 'cancelled', restocked: false, at });
     refundMinor = restMinor;

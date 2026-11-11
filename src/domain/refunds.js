@@ -5,7 +5,7 @@
 // Shipping goes back only with the last unrefunded unit of the whole order.
 
 import { ConflictError, ValidationError } from './errors.js';
-import { multiplyMinor, ratio } from './money.js';
+import { ratio } from './money.js';
 import { normalizeSku } from './product.js';
 
 export const REFUNDABLE_STATUSES = ['paid', 'shipped', 'delivered'];
@@ -67,11 +67,11 @@ export function planRefund(order, requested) {
       });
     }
     refundedAfter.set(sku, refundedAfter.get(sku) + quantity);
-    // The returned units at their unit price plus their share of the line's tax; the last units get what is left.
+    // Their share of what was paid for the line (discount and tax included); the last units get what is left.
     const amountMinor =
       quantity === remaining
         ? line.grossMinor - refundedAmountFor(order, sku)
-        : multiplyMinor(line.unitMinor, quantity) + ratio(line.taxMinor, quantity, line.quantity);
+        : ratio(line.grossMinor, quantity, line.quantity);
     return { sku, quantity, amountMinor };
   });
   const everything = order.lines.every((line) => refundedAfter.get(line.sku) === line.quantity);

@@ -82,3 +82,21 @@ test('allowedActions and summarizeOrder', () => {
   assert.deepEqual(allowedActions(placed()), ['pay', 'cancel']);
   assert.deepEqual(summarizeOrder(placed()), { id: 'ord_1', customerId: 'c1', status: 'placed', itemCount: 3, totalMinor: 1980, createdAt: 100 });
 });
+
+test('cancelling a partly refunded discounted order refunds total minus refunded', () => {
+  const discounted = {
+    ...placed(),
+    status: 'paid',
+    lines: [{ sku: 'MUG-WHITE', quantity: 3, unitMinor: 1200, netMinor: 3240, discountMinor: 360, taxMinor: 648, grossMinor: 3888, refundedQuantity: 1 }],
+    subtotalMinor: 3600,
+    discountMinor: 360,
+    taxMinor: 648,
+    totalMinor: 4383,
+    refundedMinor: 1296,
+    payment: { amountMinor: 4383, reference: 'psp', paidAt: 1 },
+    refunds: [{ id: 'r1', at: 1, reason: 'returned', lines: [{ sku: 'MUG-WHITE', quantity: 1, amountMinor: 1296 }], shippingMinor: 0, amountMinor: 1296 }],
+  };
+  const cancelled = cancelOrder(discounted, { at: 200 });
+  assert.equal(cancelled.cancellation.refundMinor, 3087);
+  assert.equal(cancelled.refundedMinor, 4383);
+});
