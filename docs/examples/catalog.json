@@ -1,0 +1,27 @@
+{
+  "products": [
+    { "sku": "TEA-GREEN", "name": "Green tea 100 g", "basePriceMinor": 450, "taxCategory": "reduced", "tags": ["tea"] },
+    { "sku": "TEA-BLACK", "name": "Assam black tea 100 g", "basePriceMinor": 520, "taxCategory": "reduced", "tags": ["tea"] },
+    { "sku": "MUG-WHITE", "name": "White mug", "basePriceMinor": 1200, "taxCategory": "standard", "tags": ["kitchen"] },
+    { "sku": "KETTLE-1", "name": "Electric kettle", "basePriceMinor": 3999, "taxCategory": "standard", "tags": ["kitchen"] },
+    { "sku": "BOOK-BREW", "name": "The brewing book", "basePriceMinor": 2500, "taxCategory": "zero", "tags": ["books"] }
+  ],
+  "priceLists": [
+    {
+      "id": "mug-volume",
+      "name": "Mug volume prices",
+      "entries": { "MUG-WHITE": { "unitMinor": 1200, "tiers": [{ "minQty": 6, "unitMinor": 1050 }] } }
+    },
+    {
+      "id": "wholesale-2026",
+      "name": "Wholesale 2026",
+      "customerGroup": "wholesale",
+      "priority": 10,
+      "entries": {
+        "MUG-WHITE": { "unitMinor": 900, "tiers": [{ "minQty": 10, "unitMinor": 800 }] },
+        "TEA-GREEN": { "unitMinor": 380 }
+      }
+    }
+  ],
+  "stock": { "TEA-GREEN": 100, "TEA-BLACK": 60, "MUG-WHITE": 20, "KETTLE-1": 3, "BOOK-BREW": 10 }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "factory-shop",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Order and inventory service for a small online shop",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "bin": { "shop": "src/cli/shop.js" },
+  "scripts": { "test": "node --test" }
+}
