@@ -1,0 +1,7 @@
+schema: layers.v1
+# A work item's steps go through these layers in this order (PLAN-02). Proposed from the repository's folders and
+# package.json's scripts: read them, and change what does not fit.
+order: ["app", "docs"]
+layers:
+  app:  { paths: ["src/**", "test/**", "package.json"], checks: ["npm test"] }
+  docs: { paths: ["README.md", "docs/**"], checks: [] }
