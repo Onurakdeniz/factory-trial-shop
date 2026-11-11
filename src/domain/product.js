@@ -47,8 +47,7 @@ function assertTags(tags) {
 /** Builds a valid product record from user input; throws ValidationError otherwise. */
 export function createProduct(input) {
   if (input === null || typeof input !== 'object') throw new ValidationError('product must be an object');
-  const sku = String(input.sku ?? '').trim();
-  assertSku(normalizeSku(sku));
+  const sku = assertSku(normalizeSku(input.sku));
   return {
     sku,
     name: assertName(input.name),

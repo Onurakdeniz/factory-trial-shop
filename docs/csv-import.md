@@ -27,7 +27,8 @@ Other columns are ignored and listed in the report. A missing required column st
 Valid rows are imported; invalid rows are rejected, with one error `{ line, sku, field, message }` per problem. A row
 with more fields than the header is rejected (`field: null`). When a SKU appears twice in the file, the first row
 counts. A SKU that is already in the catalog is **updated** with the columns the file has; columns the file does not
-have keep their values. (The spec left this open; we treat the sheet as the master for the columns it contains.)
+have keep their values. SKUs are matched case-insensitively and stored upper-case, so `mug-white` in the catalog and
+`MUG-WHITE` in the sheet are the same product: the import updates it and never adds a second one. (The spec left this open; we treat the sheet as the master for the columns it contains.)
 
 The report is `{ imported, rejected, errors, ignoredColumns }`.
 
