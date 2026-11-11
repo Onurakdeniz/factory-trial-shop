@@ -23,6 +23,7 @@ Pure functions over plain records. They never read the clock: every function tha
 | `pricing.js` | Deprecated shim that re-exports `price-lists.js` and `totals.js` for old imports; new code imports the two modules directly. |
 | `cart.js` | Cart records and line changes. |
 | `stock.js` | Stock items, holds (reservations), expiry. |
+| `waitlist.js` | Back-in-stock waitlist of one SKU: joining, leaving, when it counts as back in stock. |
 | `order.js` | Order records and the order state machine. |
 
 ## Application (`src/app/`)
@@ -34,7 +35,7 @@ Services hold no state of their own; they read and write records through the rep
 | `repositories.js` | In-memory repositories (records are cloned in and out) and the event log. |
 | `clock.js`, `ids.js` | The injected clock and sequential ids. |
 | `catalog-service.js` | Products and price lists. |
-| `inventory-service.js` | Stock levels and holds. |
+| `inventory-service.js` | Stock levels, holds and the waitlist. |
 | `cart-service.js` | Carts and their priced view. |
 | `order-service.js` | Checkout and the order lifecycle, kept in step with the stock holds. |
 | `shop.js` | `createShop({ clock, holdMinutes })`, the composition root. |

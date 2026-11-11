@@ -59,6 +59,22 @@ export function createStockRepository() {
   };
 }
 
+/** Waiting customers per SKU, first to join first; a SKU nobody waits for has an empty list. */
+export function createWaitlistRepository() {
+  const lists = new Map();
+  return {
+    kind: 'Waitlist',
+    get(sku) {
+      return clone(lists.get(sku) ?? []);
+    },
+    save(sku, list) {
+      if (list.length === 0) lists.delete(sku);
+      else lists.set(sku, clone(list));
+      return clone(list);
+    },
+  };
+}
+
 /** An append-only log of what happened, for the audit view. */
 export function createEventLog() {
   const events = [];
@@ -85,6 +101,7 @@ export function createRepositories() {
     coupons: createMemoryRepository('Coupon', (coupon) => coupon.code),
     offers: createMemoryRepository('Offer'),
     stock: createStockRepository(),
+    waitlists: createWaitlistRepository(),
     events: createEventLog(),
   };
 }

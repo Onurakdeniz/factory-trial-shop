@@ -4,6 +4,7 @@ import { NotFoundError } from '../domain/errors.js';
 import { normalizeSku } from '../domain/product.js';
 import {
   adjust,
+  availableQuantity,
   commitReservation,
   confirmReservation,
   expireReservations,
@@ -13,6 +14,7 @@ import {
   reserve,
   stockView,
 } from '../domain/stock.js';
+import { isBackInStock, join, leave, waitlistView } from '../domain/waitlist.js';
 
 export function createInventoryService({ repos, clock, ids }) {
   function requireKnownSku(rawSku) {
@@ -25,24 +27,62 @@ export function createInventoryService({ repos, clock, ids }) {
     return repos.stock.save(change(repos.stock.get(sku)));
   }
 
+  /** Tells everyone waiting for `sku`, in the order they joined, and empties the list. */
+  function notifyWaiting(sku, before, item) {
+    const now = clock.now();
+    if (!isBackInStock(before, availableQuantity(item, now))) return;
+    for (const { customerId } of repos.waitlists.get(sku)) {
+      repos.events.append('waitlist.notified', { sku, customerId }, now);
+    }
+    repos.waitlists.save(sku, []);
+  }
+
+  function view(item) {
+    return { ...stockView(item, clock.now()), waiting: repos.waitlists.get(item.sku).length };
+  }
+
   return {
     receive(rawSku, quantity) {
       const sku = requireKnownSku(rawSku);
+      const before = availableQuantity(repos.stock.get(sku), clock.now());
       const item = update(sku, (current) => receive(current, quantity));
       repos.events.append('stock.received', { sku, quantity }, clock.now());
+      notifyWaiting(sku, before, item);
       return stockView(item, clock.now());
     },
 
     adjust(rawSku, delta, reason = 'count') {
       const sku = requireKnownSku(rawSku);
+      const before = availableQuantity(repos.stock.get(sku), clock.now());
       const item = update(sku, (current) => adjust(current, delta, clock.now()));
       repos.events.append('stock.adjusted', { sku, delta, reason }, clock.now());
+      notifyWaiting(sku, before, item);
       return stockView(item, clock.now());
     },
 
     getStock(rawSku) {
       const sku = requireKnownSku(rawSku);
-      return stockView(repos.stock.get(sku), clock.now());
+      return view(repos.stock.get(sku));
+    },
+
+    /** Puts a customer on the waitlist of a product with nothing available. */
+    joinWaitlist(rawSku, customerId) {
+      const sku = requireKnownSku(rawSku);
+      const now = clock.now();
+      const available = availableQuantity(repos.stock.get(sku), now);
+      const { list, position } = join(repos.waitlists.get(sku), { customerId, available, sku }, now);
+      repos.waitlists.save(sku, list);
+      return { sku, customerId, position };
+    },
+
+    listWaiting(rawSku) {
+      const sku = requireKnownSku(rawSku);
+      return waitlistView(sku, repos.waitlists.get(sku));
+    },
+
+    leaveWaitlist(rawSku, customerId) {
+      const sku = requireKnownSku(rawSku);
+      repos.waitlists.save(sku, leave(repos.waitlists.get(sku), customerId, sku));
     },
 
     listStock() {
