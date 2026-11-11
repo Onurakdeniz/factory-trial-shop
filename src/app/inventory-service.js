@@ -8,6 +8,7 @@ import {
   commitReservation,
   confirmReservation,
   expireReservations,
+  lowStock,
   receive,
   reduceReservation,
   release,
@@ -91,6 +92,11 @@ export function createInventoryService({ repos, clock, ids }) {
         .list()
         .map((item) => stockView(item, now))
         .sort((a, b) => a.sku.localeCompare(b.sku));
+    },
+
+    /** Active products with `threshold` units or fewer available, fewest first. */
+    lowStock(threshold) {
+      return lowStock(repos.stock.list(), repos.products.list(), threshold, clock.now());
     },
 
     /** Places a hold that expires after `minutes` (null: never). Returns the reservation id. */

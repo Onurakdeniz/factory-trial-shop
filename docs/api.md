@@ -41,10 +41,16 @@ All bodies are JSON. Money fields end in `Minor` and are integer cents. Errors l
 | `GET /stock/:sku` | | `{ sku, onHand, reserved, available, holds, waiting }`, `waiting` being the number of customers on the waitlist |
 | `POST /stock/:sku/receive` | `{ quantity }` | the stock view |
 | `POST /stock/:sku/adjust` | `{ delta, reason? }` | the stock view |
+| `GET /reports/low-stock?threshold=5` | | `{ threshold, items: [{ sku, name, left }] }` |
 | `POST /stock/expire-holds` | | `{ expired }`, the number of holds removed |
 | `POST /stock/:sku/waitlist` | `{ customerId }` | 201, `{ sku, customerId, position }`; `position` is 1 for the first customer waiting |
 | `GET /stock/:sku/waitlist` | | `{ sku, waiting: [{ customerId, since }] }`, first to join first; `since` is the join time in milliseconds |
 | `DELETE /stock/:sku/waitlist/:customerId` | | 204, no body |
+
+The low-stock report lists the active products with `left <= threshold`, fewest first (ties by SKU). `left` is the
+units available to sell (`available`: on hand minus live holds); a product that was never stocked has 0 left.
+`threshold` is 5 unless `?threshold=` gives another; it must be a whole number of zero or more, otherwise the answer
+is 400 `validation_failed`.
 
 The SKU is matched case-insensitively and answered upper-case. Waitlist errors: an unknown SKU is 404 `not_found`;
 a missing or empty `customerId` is 400 `validation_failed`; a product with units available is 409 `in_stock`; a

@@ -118,3 +118,11 @@ test('releases, expiries, extra receipts and negative adjustments notify nobody'
   shop.inventory.adjust('TEA-GREEN', -1);
   assert.deepEqual(shop.events.list({ type: 'waitlist.notified' }), []);
 });
+
+test('lowStock counts available units and ignores live holds only', () => {
+  const { shop, clock } = seededShop();
+  shop.inventory.hold('MUG-WHITE', 18, { minutes: 15 });
+  assert.deepEqual(shop.inventory.lowStock(3), [{ sku: 'KETTLE-1', name: 'Kettle', left: 3 }, { sku: 'MUG-WHITE', name: 'Mug', left: 2 }].sort((a, b) => a.left - b.left).map((l) => ({ ...l, name: shop.catalog.getProduct(l.sku).name })));
+  clock.advanceMinutes(15);
+  assert.deepEqual(shop.inventory.lowStock(3).map((line) => line.sku), ['KETTLE-1']);
+});

@@ -171,3 +171,26 @@ test('the waitlist can be joined, read and left over HTTP', async () => {
   assert.deepEqual(shop.events.list({ type: 'waitlist.notified' }).map((e) => e.customerId), ['bob']);
   assert.deepEqual((await call('GET', '/stock/KETTLE-1/waitlist')).body.waiting, []);
 });
+
+test('GET /reports/low-stock lists products running low', async () => {
+  const { call, shop } = api();
+  const fallback = await call('GET', '/reports/low-stock');
+  assert.equal(fallback.status, 200);
+  assert.equal(fallback.body.threshold, 5);
+  assert.deepEqual(fallback.body.items.map((item) => [item.sku, item.left]), [['KETTLE-1', 3]]);
+  shop.inventory.hold('MUG-WHITE', 18, { minutes: 15 });
+  const custom = await call('GET', '/reports/low-stock?threshold=10');
+  assert.equal(custom.body.threshold, 10);
+  assert.deepEqual(custom.body.items.map((item) => [item.sku, item.left]), [['MUG-WHITE', 2], ['KETTLE-1', 3], ['BOOK-BREW', 10]]);
+  const zero = await call('GET', '/reports/low-stock?threshold=0');
+  assert.deepEqual(zero.body, { threshold: 0, items: [] });
+});
+
+test('GET /reports/low-stock refuses a threshold that is not a whole number of zero or more', async () => {
+  const { call } = api();
+  for (const bad of ['-1', '2.5', 'abc', '', '1e3', '99999999999999999999']) {
+    const response = await call('GET', `/reports/low-stock?threshold=${bad}`);
+    assert.equal(response.status, 400, bad);
+    assert.equal(response.body.error.code, 'validation_failed');
+  }
+});

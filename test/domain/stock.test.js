@@ -7,6 +7,7 @@ import {
   confirmReservation,
   createStockItem,
   expireReservations,
+  lowStock,
   receive,
   release,
   reserve,
@@ -91,4 +92,31 @@ test('confirming an expired hold needs the units to be still available', () => {
 test('commit never takes on-hand below zero', () => {
   const item = { sku: 'TEA-GREEN', onHand: 1, reservations: [{ id: 'r1', quantity: 2, orderId: null, createdAt: 0, expiresAt: null }] };
   assert.throws(() => commitReservation(item, 'r1'), InsufficientStockError);
+});
+
+test('lowStock keeps active products at or under the threshold, fewest first, then by SKU', () => {
+  const products = [
+    { sku: 'B', name: 'Bee', active: true },
+    { sku: 'A', name: 'Ay', active: true },
+    { sku: 'C', name: 'Sea', active: true },
+    { sku: 'D', name: 'Dee', active: false },
+    { sku: 'E', name: 'Eee', active: true },
+    { sku: 'F', name: 'Eff', active: true },
+  ];
+  const items = [
+    { sku: 'A', onHand: 5, reservations: [] },
+    { sku: 'B', onHand: 5, reservations: [] },
+    { sku: 'C', onHand: 9, reservations: [{ id: 'r1', quantity: 6, orderId: null, createdAt: 0, expiresAt: null }] },
+    { sku: 'D', onHand: 0, reservations: [] },
+    { sku: 'F', onHand: 6, reservations: [{ id: 'r2', quantity: 6, orderId: null, createdAt: 0, expiresAt: 100 }] },
+  ];
+  assert.deepEqual(lowStock(items, products, 5, 0), [
+    { sku: 'E', name: 'Eee', left: 0 },
+    { sku: 'F', name: 'Eff', left: 0 },
+    { sku: 'C', name: 'Sea', left: 3 },
+    { sku: 'A', name: 'Ay', left: 5 },
+    { sku: 'B', name: 'Bee', left: 5 },
+  ]);
+  assert.deepEqual(lowStock(items, products, 0, 200).map((line) => line.sku), ['E']);
+  assert.deepEqual(lowStock(items, products, 0, 0).map((line) => line.sku), ['E', 'F']);
 });
