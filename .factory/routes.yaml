@@ -1,0 +1,18 @@
+schema: routes.v1
+default: { agent: claude-code, model: claude-sonnet-5-5, effort: medium }
+match: first                 # the first matching route wins
+invariants:                  # no route can override these (GW-03)
+  - reviewer_independent_of_author
+routes:
+  # The reviewer's model: one setting (claude-opus-5-5 reviews more deeply, at twice the price). The gateway never
+  # lets a model review a change it wrote (GW-03): a change this model wrote is reviewed by the next model that did
+  # not write it, in the order claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5.
+  - when: 'step.role == "reviewer"'
+    use: { model: claude-sonnet-5-5, independent_of: author }
+  - when: 'step.role == "side_chat"'   # the side chat's answer about a run (TEAM-09·5)
+    use: { agent: api, model: claude-sonnet-5-5, effort: low }
+escalate:
+  on: capability             # only a capability failure escalates the model (GW-06)
+  after_failed_rounds: 2
+  start: current
+  ladder: [claude-sonnet-5-5, claude-opus-5-5, human]
