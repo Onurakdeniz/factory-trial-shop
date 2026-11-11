@@ -38,3 +38,17 @@ take `onHand` below the units that are reserved.
 `onHand` changes only when goods are received, after a count (`adjust`), when an order ships, and when returned units
 are restocked with a refund (`restock: true`). A change of an order's status never puts units back on hand: units
 that left the warehouse are counted again only once someone has them in hand, so `onHand` always matches the shelves.
+
+## Waitlist
+
+A customer can wait for a product that has nothing available (`available <= 0`): `POST /stock/:sku/waitlist`.
+Joining is refused with `in_stock` when units are available right now and with `already_waiting` when the customer
+is on that product's list. Customers are listed first to join first; `since` is the shop clock's time of joining.
+`GET /stock/:sku` reports the number waiting as `waiting`.
+
+- **Notification.** When `receive` or a positive `adjust` makes units available for a product that had none
+  available just before, every customer on its list is notified in the order they joined, and the list is emptied.
+  A notification is one `waitlist.notified` event `{ sku, customerId }` per customer in the event log.
+- **Nothing else notifies.** Releasing or expiring holds, restocking returned units with a refund, receiving more of
+  a product that already had units available, and negative adjustments do not.
+- A customer leaves the list with `DELETE /stock/:sku/waitlist/:customerId`; `not_waiting` if not on it.

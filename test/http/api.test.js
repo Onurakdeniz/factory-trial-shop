@@ -148,3 +148,26 @@ test('products can be imported from CSV', async () => {
   assert.deepEqual([response.status, response.body.imported], [200, 1]);
   assert.equal((await call('POST', '/products/import', { csv: 'sku\nX-1\n' })).body.error.code, 'missing_column');
 });
+
+test('the waitlist can be joined, read and left over HTTP', async () => {
+  const { shop, call } = api();
+  assert.equal((await call('POST', '/stock/nope/waitlist', { customerId: 'ann' })).body.error.code, 'not_found');
+  assert.equal((await call('POST', '/stock/kettle-1/waitlist', { customerId: 'ann' })).body.error.code, 'in_stock');
+  shop.inventory.adjust('KETTLE-1', -3);
+  assert.equal((await call('POST', '/stock/kettle-1/waitlist', {})).status, 400);
+  assert.equal((await call('POST', '/stock/kettle-1/waitlist', { customerId: '' })).body.error.code, 'validation_failed');
+  const joined = await call('POST', '/stock/kettle-1/waitlist', { customerId: 'ann' });
+  assert.deepEqual(joined, { status: 201, body: { sku: 'KETTLE-1', customerId: 'ann', position: 1 } });
+  assert.equal((await call('POST', '/stock/KETTLE-1/waitlist', { customerId: 'ann' })).body.error.code, 'already_waiting');
+  await call('POST', '/stock/KETTLE-1/waitlist', { customerId: 'bob' });
+  const listed = await call('GET', '/stock/KETTLE-1/waitlist');
+  assert.deepEqual(listed.body.waiting.map((w) => w.customerId), ['ann', 'bob']);
+  assert.equal((await call('GET', '/stock/KETTLE-1')).body.waiting, 2);
+  assert.deepEqual(await call('DELETE', '/stock/KETTLE-1/waitlist/ann'), { status: 204, body: null });
+  const gone = await call('DELETE', '/stock/KETTLE-1/waitlist/ann');
+  assert.equal(gone.status, 404);
+  assert.equal(gone.body.error.code, 'not_waiting');
+  await call('POST', '/stock/KETTLE-1/receive', { quantity: 1 });
+  assert.deepEqual(shop.events.list({ type: 'waitlist.notified' }).map((e) => e.customerId), ['bob']);
+  assert.deepEqual((await call('GET', '/stock/KETTLE-1/waitlist')).body.waiting, []);
+});

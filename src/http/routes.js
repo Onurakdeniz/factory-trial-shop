@@ -67,6 +67,14 @@ function stockRoutes(router, shop) {
     const input = requireObject(body);
     return ok(shop.inventory.adjust(params.sku, requireInteger(input, 'delta'), optionalString(input, 'reason')));
   });
+  router.add('POST', '/stock/:sku/waitlist', ({ params, body }) =>
+    created(shop.inventory.joinWaitlist(params.sku, (body ?? {}).customerId)),
+  );
+  router.add('GET', '/stock/:sku/waitlist', ({ params }) => ok(shop.inventory.listWaiting(params.sku)));
+  router.add('DELETE', '/stock/:sku/waitlist/:customerId', ({ params }) => {
+    shop.inventory.leaveWaitlist(params.sku, params.customerId);
+    return { status: 204, body: null };
+  });
   router.add('POST', '/stock/expire-holds', () => ok({ expired: shop.inventory.expireHolds() }));
 }
 

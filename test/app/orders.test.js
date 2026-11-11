@@ -41,7 +41,7 @@ test('pay, ship and deliver take the units off hand', () => {
   shop.orders.pay(order.id, { amountMinor: order.totalMinor, reference: 'psp-1' });
   assert.equal(shop.inventory.getStock('KETTLE-1').onHand, 3);
   shop.orders.ship(order.id, { carrier: 'DHL', trackingCode: 'JD01' });
-  assert.deepEqual(shop.inventory.getStock('KETTLE-1'), { sku: 'KETTLE-1', onHand: 1, reserved: 0, available: 1, holds: [] });
+  assert.deepEqual(shop.inventory.getStock('KETTLE-1'), { sku: 'KETTLE-1', onHand: 1, reserved: 0, available: 1, holds: [], waiting: 0 });
   const delivered = shop.orders.deliver(order.id);
   assert.equal(delivered.status, 'delivered');
   assert.deepEqual(
@@ -119,7 +119,7 @@ test('a late payment for units sold to someone else is refused and stock stays w
   assert.equal(shop.orders.getOrder(first.id).payment, null);
   shop.orders.pay(second.id, { amountMinor: second.totalMinor, reference: 'psp-2' });
   shop.orders.ship(second.id, { carrier: 'DHL' });
-  assert.deepEqual(shop.inventory.getStock('KETTLE-1'), { sku: 'KETTLE-1', onHand: 0, reserved: 0, available: 0, holds: [] });
+  assert.deepEqual(shop.inventory.getStock('KETTLE-1'), { sku: 'KETTLE-1', onHand: 0, reserved: 0, available: 0, holds: [], waiting: 0 });
 });
 
 test('a late payment takes a firm hold again when the units are still there, swept or not', () => {
